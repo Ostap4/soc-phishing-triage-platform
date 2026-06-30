@@ -19,9 +19,7 @@ class LoginAttempt(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     updated_at = db.Column(
-        db.DateTime,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow
+        db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
     )
 
     def is_locked(self):

@@ -4,7 +4,6 @@ Flask-SQLAlchemy==3.1.1
 PyJWT==2.8.0
 itsdangerous==2.1.2
 Werkzeug==3.0.1
-psycopg2-binary==2.9.9
 
 requests==2.31.0
 python-dotenv==1.0.0
@@ -14,3 +13,6 @@ thefuzz==0.20.0
 python-Levenshtein==0.23.0
 ollama==0.1.6
 psycopg[binary]==3.1.18
+
+black==26.5.1
+ruff==0.15.14

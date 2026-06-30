@@ -2,6 +2,8 @@
 import { useEffect, useState, useCallback, type DragEvent, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
 
 type Verdict = "Malicious" | "Suspicious" | "Safe";
 
@@ -58,7 +60,7 @@ export default function Dashboard() {
     setHistoryLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/scans/history", {
+      const response = await fetch(`${API_BASE_URL}/api/scans/history`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -106,7 +108,7 @@ export default function Dashboard() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("http://127.0.0.1:5000/api/scans/upload", {
+      const response = await fetch(`${API_BASE_URL}/api/scans/upload`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

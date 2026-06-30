@@ -13,9 +13,7 @@ def get_current_user_id():
 
     try:
         payload = jwt.decode(
-            token,
-            current_app.config["SECRET_KEY"],
-            algorithms=["HS256"]
+            token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
         )
 
         return payload.get("user_id")

@@ -62,7 +62,10 @@ def upload_scan(current_user_id):
         malicious_urls_count = 0
         for url in urls_to_scan:
             vt_report = scanner.get_url_report(url)
-            if vt_report.get("status") == "Success" and vt_report.get("malicious", 0) > 0:
+            if (
+                vt_report.get("status") == "Success"
+                and vt_report.get("malicious", 0) > 0
+            ):
                 malicious_urls_count += 1
 
         malicious_files_count = 0
@@ -72,7 +75,10 @@ def upload_scan(current_user_id):
                 continue
 
             vt_report = scanner.get_hash_report(file_hash)
-            if vt_report.get("status") == "Success" and vt_report.get("malicious", 0) > 0:
+            if (
+                vt_report.get("status") == "Success"
+                and vt_report.get("malicious", 0) > 0
+            ):
                 malicious_files_count += 1
 
         ai_report = None
@@ -99,30 +105,35 @@ def upload_scan(current_user_id):
         db.session.add(new_scan)
         db.session.commit()
 
-        return jsonify({
-            "message": "Scan completed successfully",
-            "scan_id": new_scan.id,
-            "filename": new_scan.filename,
-            "status": new_scan.status,
-
-            "malicious_urls": malicious_urls_count,
-            "malicious_files": malicious_files_count,
-
-            "urls_count": len(urls_to_scan),
-            "attachments_count": len(attachments),
-
-            "ai_verdict": ai_verdict,
-            "brief_reason": brief_reason,
-            "ai_report": ai_report,
-
-            "mismatched_links": mismatched_links,
-            "created_at": new_scan.created_at.isoformat() if getattr(new_scan, "created_at", None) else None,
-        }), 200
+        return (
+            jsonify(
+                {
+                    "message": "Scan completed successfully",
+                    "scan_id": new_scan.id,
+                    "filename": new_scan.filename,
+                    "status": new_scan.status,
+                    "malicious_urls": malicious_urls_count,
+                    "malicious_files": malicious_files_count,
+                    "urls_count": len(urls_to_scan),
+                    "attachments_count": len(attachments),
+                    "ai_verdict": ai_verdict,
+                    "brief_reason": brief_reason,
+                    "ai_report": ai_report,
+                    "mismatched_links": mismatched_links,
+                    "created_at": (
+                        new_scan.created_at.isoformat()
+                        if getattr(new_scan, "created_at", None)
+                        else None
+                    ),
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
         db.session.rollback()
         print(f"[ERROR] Scan failed: {e}")
-        return jsonify({"error": "Scan failed", "details": str(e)}), 500
+        return jsonify({"error": "Scan failed. Please try again later."}), 500
 
     finally:
         if os.path.exists(temp_path):
@@ -133,8 +144,7 @@ def upload_scan(current_user_id):
 @jwt_required
 def get_scan_history(current_user_id):
     scans = (
-        Scan.query
-        .filter_by(user_id=current_user_id)
+        Scan.query.filter_by(user_id=current_user_id)
         .order_by(Scan.created_at.desc())
         .limit(50)
         .all()
@@ -145,20 +155,20 @@ def get_scan_history(current_user_id):
     for scan in scans:
         ai_report = scan.ai_report if isinstance(scan.ai_report, dict) else {}
 
-        history.append({
-            "id": scan.id,
-            "filename": scan.filename,
-            "status": scan.status,
-            "created_at": scan.created_at.isoformat() if scan.created_at else None,
-
-            "malicious_urls": scan.vt_malicious_urls or 0,
-            "malicious_files": scan.vt_malicious_files or 0,
-
-            "ai_verdict": ai_report.get("ai_verdict", "Unknown"),
-            "brief_reason": ai_report.get("brief_reason"),
-            "urgency_level": ai_report.get("urgency_level"),
-            "financial_pressure": ai_report.get("financial_pressure"),
-        })
+        history.append(
+            {
+                "id": scan.id,
+                "filename": scan.filename,
+                "status": scan.status,
+                "created_at": scan.created_at.isoformat() if scan.created_at else None,
+                "malicious_urls": scan.vt_malicious_urls or 0,
+                "malicious_files": scan.vt_malicious_files or 0,
+                "ai_verdict": ai_report.get("ai_verdict", "Unknown"),
+                "brief_reason": ai_report.get("brief_reason"),
+                "urgency_level": ai_report.get("urgency_level"),
+                "financial_pressure": ai_report.get("financial_pressure"),
+            }
+        )
 
     return jsonify({"history": history}), 200
 
@@ -166,25 +176,25 @@ def get_scan_history(current_user_id):
 @scans_bp.route("/<int:scan_id>", methods=["GET"])
 @jwt_required
 def get_scan_details(current_user_id, scan_id):
-    scan = Scan.query.filter_by(
-        id=scan_id,
-        user_id=current_user_id
-    ).first()
+    scan = Scan.query.filter_by(id=scan_id, user_id=current_user_id).first()
 
     if not scan:
         return jsonify({"error": "Scan not found"}), 404
 
     ai_report = scan.ai_report if isinstance(scan.ai_report, dict) else {}
 
-    return jsonify({
-        "id": scan.id,
-        "filename": scan.filename,
-        "status": scan.status,
-        "created_at": scan.created_at.isoformat() if scan.created_at else None,
-
-        "malicious_urls": scan.vt_malicious_urls or 0,
-        "malicious_files": scan.vt_malicious_files or 0,
-
-        "ai_report": ai_report,
-        "mismatched_links": scan.mismatched_links or [],
-    }), 200
+    return (
+        jsonify(
+            {
+                "id": scan.id,
+                "filename": scan.filename,
+                "status": scan.status,
+                "created_at": scan.created_at.isoformat() if scan.created_at else None,
+                "malicious_urls": scan.vt_malicious_urls or 0,
+                "malicious_files": scan.vt_malicious_files or 0,
+                "ai_report": ai_report,
+                "mismatched_links": scan.mismatched_links or [],
+            }
+        ),
+        200,
+    )
