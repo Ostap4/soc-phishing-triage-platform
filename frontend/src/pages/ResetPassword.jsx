@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Turnstile } from "@marsidev/react-turnstile";
 
-const API_URL = "http://127.0.0.1:5000";
+const API_URL = "";
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 export default function ResetPassword() {
@@ -23,92 +23,123 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
 
   const resetCaptcha = () => {
-    setCaptchaToken(null);
-    setCaptchaKey((prev) => prev + 1);
-  };
+  setCaptchaToken(null);
+  setCaptchaKey((prev) => prev + 1);
+};
 
-  const validatePassword = () => {
-    if (!password || !confirmPassword) {
-      setError("Please fill in both password fields.");
-      return false;
-    }
+const validatePasswordValue = (password) => {
+  if (!password) {
+    return "Password is required.";
+  }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return false;
-    }
+  if (password.length < 8) {
+    return "Password must be at least 8 characters long.";
+  }
 
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+  if (!/[a-z]/.test(password)) {
+    return "Password must contain at least one lowercase letter.";
+  }
 
-    if (!passwordRegex.test(password)) {
-      setError("Password must be at least 8 characters long and contain both letters and numbers.");
-      return false;
-    }
+  if (!/[A-Z]/.test(password)) {
+    return "Password must contain at least one uppercase letter.";
+  }
 
-    if (!captchaToken) {
-      setError("Please complete CAPTCHA verification.");
-      return false;
-    }
+  if (!/\d/.test(password)) {
+    return "Password must contain at least one number.";
+  }
 
-    return true;
-  };
+  return null;
+};
 
-  const handleReset = async (e) => {
-    e.preventDefault();
+const validateForm = () => {
+  if (!password || !confirmPassword) {
+    setError("Please fill in both password fields.");
+    return false;
+  }
 
-    setError(null);
-    setSuccess(null);
+  if (password !== confirmPassword) {
+    setError("Passwords do not match.");
+    return false;
+  }
 
-    if (!token) {
-      setError("Invalid reset link. No token provided.");
-      return;
-    }
+  const passwordError = validatePasswordValue(password);
 
-    if (!validatePassword()) {
-      return;
-    }
+  if (passwordError) {
+    setError(passwordError);
+    return false;
+  }
 
-    setLoading(true);
+  if (!captchaToken) {
+    setError("Please complete CAPTCHA verification.");
+    return false;
+  }
 
-    try {
-      const response = await fetch(`${API_URL}/auth/reset-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token,
-          password,
-          captchaToken,
-        }),
-      });
+  return true;
+};
 
-      const data = await response.json();
+const handleReset = async (e) => {
+  e.preventDefault();
 
-      if (!response.ok) {
-        resetCaptcha();
-        throw new Error(data.error || data.detail || data.message || "Failed to reset password");
-      }
+  setError(null);
+  setSuccess(null);
 
-      setSuccess("Password successfully updated. Redirecting to login...");
+  if (!token) {
+    setError("Invalid reset link. No token provided.");
+    return;
+  }
 
-      setPassword("");
-      setConfirmPassword("");
+  if (!validateForm()) {
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        token,
+        password,
+        captchaToken,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
       resetCaptcha();
 
-      setTimeout(() => {
-        navigate("/login");
-      }, 1200);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unknown error occurred");
+      if (data.details && Array.isArray(data.details)) {
+        throw new Error(data.details.join(" "));
       }
-    } finally {
-      setLoading(false);
+
+      throw new Error(
+        data.error || data.detail || data.message || "Failed to reset password"
+      );
     }
-  };
+
+    setSuccess("Password successfully updated. Redirecting to login...");
+
+    setPassword("");
+    setConfirmPassword("");
+    resetCaptcha();
+
+    setTimeout(() => {
+      navigate("/login");
+    }, 1200);
+  } catch (err) {
+    if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("An unknown error occurred");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!token) {
     return (
