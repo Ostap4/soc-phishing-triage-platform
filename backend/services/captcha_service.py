@@ -28,7 +28,7 @@ def verify_turnstile_token(token, remote_ip=None):
         response = requests.post(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
             data=payload,
-            timeout=5
+            timeout=5,
         )
 
         result = response.json()

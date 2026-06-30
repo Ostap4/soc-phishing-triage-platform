@@ -3,19 +3,24 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+
 def send_reset_email(to_email, reset_link):
     """
     Ізольований сервіс для відправки транзакційних листів через SMTP.
     """
-    smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = int(os.getenv('SMTP_PORT', 587))
-    smtp_user = os.getenv('SMTP_USER')
-    smtp_password = os.getenv('SMTP_PASSWORD')
+    smtp_server = os.getenv("SMTP_SERVER") or os.getenv("SMTP_HOST")
+    smtp_port = int(os.getenv("SMTP_PORT", 587))
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+
+    if not smtp_server or not smtp_user or not smtp_password:
+        print("[ERROR] SMTP configuration is missing.")
+        return False
 
     msg = MIMEMultipart()
-    msg['From'] = f"SOC Phishing Triage System <{smtp_user}>"
-    msg['To'] = to_email
-    msg['Subject'] = "[SECURITY ALERT] Password Reset Request"
+    msg["From"] = f"SOC Phishing Triage System <{smtp_user}>"
+    msg["To"] = to_email
+    msg["Subject"] = "[SECURITY ALERT] Password Reset Request"
 
     html_content = f"""
     <html>
@@ -35,7 +40,7 @@ def send_reset_email(to_email, reset_link):
       </body>
     </html>
     """
-    msg.attach(MIMEText(html_content, 'html'))
+    msg.attach(MIMEText(html_content, "html"))
 
     try:
         server = smtplib.SMTP(smtp_server, smtp_port)

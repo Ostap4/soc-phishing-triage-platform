@@ -1,20 +1,37 @@
 import { defineConfig } from "vite";
-import react from '@vitejs/plugin-react'
+import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
-import path from "path"
-import { fileURLToPath } from "url"
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+import path from "path";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+
   server: {
-    port: 3000, // Завжди запускати на 3000
-    strictPort: true, // Впасти з помилкою, якщо порт 3000 зайнятий (щоб ти не шукав його по інших портах)
+    host: "0.0.0.0",
+    port: 3000,
+    strictPort: true,
+
+    allowedHosts: [
+      "unamerced-ivette-pseudocotyledonal.ngrok-free.dev",
+      ".ngrok-free.dev",
+      ".ngrok-free.app",
+    ],
+
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:5000",
+        changeOrigin: true,
+      },
+      "/auth": {
+        target: "http://127.0.0.1:5000",
+        changeOrigin: true,
+      },
+    },
   },
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+});
