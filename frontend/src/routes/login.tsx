@@ -4,7 +4,7 @@ import { Turnstile } from "@marsidev/react-turnstile";
 
 type AuthMode = "login" | "register" | "forgot";
 
-const API_URL = "http://127.0.0.1:5000";
+const API_URL = "";
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 export default function AuthPage() {
